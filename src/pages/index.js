@@ -1,13 +1,49 @@
 import React from "react"
-import { Link } from "gatsby"
+import { Link, graphql } from "gatsby"
 
 import Layout from "../components/layout"
 import SEO from "../components/seo"
 
-const IndexPage = () => (
-  <Layout>
-    <SEO title="Home" />
-  </Layout>
-)
+export default function IndexPage({ data }) {
+  return (
+    <Layout>
+      <SEO title="Home" />
+      <div>
+        {data.allMdx.edges.map(({ node }) => (
+          <article>
+            <h2>
+              <Link to={`/posts/${node.frontmatter.slug}`}>
+                {node.frontmatter.title}
+              </Link>
+            </h2>
+            <p>
+              {node.frontmatter.date} | {node.timeToRead} minute read
+            </p>
+            <p>
+              {node.excerpt}{" "}
+              <Link to={`/posts/${node.frontmatter.slug}`}>read more</Link>.
+            </p>
+          </article>
+        ))}
+      </div>
+    </Layout>
+  )
+}
 
-export default IndexPage
+export const query = graphql`
+  query {
+    allMdx {
+      edges {
+        node {
+          excerpt(pruneLength: 250)
+          frontmatter {
+            title
+            slug
+            date
+          }
+          timeToRead
+        }
+      }
+    }
+  }
+`
