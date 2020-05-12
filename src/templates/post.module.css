@@ -1,0 +1,10 @@
+.title {
+  padding-bottom: 0.8125rem;
+}
+
+.byline {
+  font-variant: small-caps;
+  text-align: center;
+  color: hsl(225, 20%, 45%);
+  padding: 0 0 2.4375rem 0;
+}

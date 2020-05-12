@@ -1,0 +1,212 @@
+---
+title: Why don't you have a monorepo?
+slug: why-dont-you-have-a-monorepo
+author: Viktor Charypar
+date: 2019-02-01
+---
+
+You’ve probably heard that Facebook, Twitter, Google, Microsoft, and other tech industry behemoths keep their entire codebase, all services, applications and tools in a single huge repository – a monorepo.
+
+If you’re used to the standard way most teams manage their codebase – one application, service or tool per repository – this sounds very strange. Many people conclude it must only solve problems the likes of Google and Facebook have.
+
+But monorepos are not only useful if you can build a custom version control system to cope. They actually have many advantages even at a smaller scale that standard tools like Git handle just fine.
+
+Using a monorepo can result in fewer barriers in the software development lifecycle. It can allow faster feedback loops, less time spent looking for code, and less time reporting bugs and waiting for them to be fixed. It also makes it much easier to analyze a huge treasure trove of interesting data about how your software is actually built and where problem areas are.
+
+We’ve used a monorepo at one of our clients for almost three years and it’s been great. I really don’t see why you wouldn’t. But roughly every two months I tend to have a conversation with someone who’s not used to working in this way and the entire idea just seems totally crazy to them. And the conversation tends to always follow the same path, starting with the sheer size and quickly moving on to dependency management, testing and versioning strategies. It gets complicated.
+
+It’s time I finally wrote down a coherent reasoning behind why I believe monorepos should be the default way we manage a codebase. Especially if you’re building something even vaguely [microservices](https://hub.packtpub.com/why-moving-from-a-monolithic-architecture-to-microservices-is-so-hard-gitlabs-jason-plum-breaks-it-down-kubeconcnc-talk/) based, you have multiple teams and want to share common code.
+
+## What do you mean “just one repo”?
+
+Just so we’re all thinking about the same thing, when I say monorepo, I’m talking about a strategy of storing all the code you as an organisation are responsible for. This could be a project, a programme of work, or the entirety of a product and infrastructure code of your company in a single repository, under one revision history. Individual components (libraries, services, custom tools, infrastructure automation, …) are stored alongside each other in folders. It’s analogous to the UNIX file tree which has a single root, as opposed to multiple, device based roots in Windows operating systems.
+
+People not familiar with the concept typically have a fairly strong reaction to the idea. One giant repo? Why would anyone do that? That cannot possibly scale! Many different objections come out, most of them often only tangentially related to storing all the code together. Occasionally, people get almost religious about it (I am talking about engineers after all).
+
+Despite being used by some of the largest tech companies, it is a relatively foreign concept and on the surface goes against everything you’ve been taught about not making huge monolithic things. It also seems like we’re fixing things that are not broken: everyone in the world is doing multiple repos, building and sharing artifacts (npm modules, JARs, ruby gems…), using SemVer to version and manage dependencies and long running branches to patch bugs in older versions of code, right? Surely if it’s industry standard it must be the right thing to do.
+
+Well, I don’t believe so.
+
+I personally think almost every single one of those things is harder, more laborious, more brittle, harder to test and generally just more wasteful than the equivalent approach you get as a consequence of a monorepo. And a few of the capabilities a monorepo enables can’t be replicated in a multi-repo situation even if you build a lot of infrastructure around it, basically because you introduce distributed computing problems and get on the bad side of CAP theorem (we’ll look at this closer below).
+
+Apart from letting you make dependency management easier and testing more reliable than it can get with multiple repos, monorepo will also give you a few simple, important, but easy to underestimate advantages.
+
+## The biggest advantages of using a monorepo
+
+### It’s easier to find and discover your code in a monorepo
+
+With a monorepo, there is no question about where all the code is and when you have access to some of it, you can see all of it. It may come as a surprise, but making code visible to the rest of the organization isn’t always the default behavior. Human insecurities get in the way and people create private repositories and squirrel code away to experiment with things “until they are ready”.
+
+Typically, when the thing does get “ready”, it now has a Continuous Integration (CI) service attached, many hyperlinks lead to it from emails, chat rooms and internal wikis, several people have cloned the repo and it’s now quite a hassle to move the code to a more visible, obvious place and so it stays where it started. As a consequence, it is often quite hard work to find all the code for the project and gain access to it, which is hard and expensive for new joiners and hurts collaboration in general.
+
+You could say this is a matter of discipline and I will agree with you, but why leave to individual discipline what you can simply prevent by telling everyone that all the code belongs in the one repo, it’s completely ok to put even little experiments and pet projects there. You never know what they will grow into and putting them in the repo has basically no cost attached.
+
+Visibility aids understanding of how to use internal APIs (internal in the sense of being designed and built by your organisation). The ability to search the entire codebase from within your editor and find usages of the call you’re considering to use is very powerful. Code editors and languages can also be set up for cross-references to work, which means you can follow references into shared libraries and find usages of shared code across the codebase.And I mean the entire codebase.
+
+This also enables all kind of analyses to be done on the codebase and its history. Knowing the totality of the codebase and having a history of all the code lets you see dependencies, find parts of the codebase only committed to by a very limited group of people, hotspots changing suspiciously frequently or by a large number of people… Your codebase is the source of truth about what your engineering organisation is producing, it contains an incredible amount of interesting information we typically just ignore.
+
+### Monorepos give you more flexibility when moving code
+
+Conway’s Law famously states that “organizations which design systems (…) are constrained to produce designs which are copies of the communication structures of these organisations”. This is due to the level of communication necessary to produce a coherent piece of software.
+
+The further away in the organisation an owner of a piece of software is, the harder it is to directly influence it, so you design strict interfaces to insulate yourself from the effect of “their” changes. This typically affects the repository structure as well.
+
+There are two problems with this: the structure is generally chosen upfront, before we know what the right shape of the software is, and changing the structure has a cost attached.
+
+With each service and library being in a separate repository, the module boundaries are quite a lot stronger than if they are all in one repository. Extracting common pieces of code into a shared library becomes more difficult and involves a setup of a whole new repository – full with CI integration, pull request templates and labels, access control setup… hard work.
+
+In a monorepo, these boundaries are much more fluid and flexible: moving code between services and libraries, extracting new ones or inlining libraries back into their consumers all become as easy as general refactoring. There is no reason to use a completely different set of tools to change the small-scale and the large-scale structure of your codebase.
+
+The only real downside is tooling support for access control and declaring ownership. However, as monorepos get more popular, this support is getting better. GitHub now supports [codeowners](https://blog.github.com/2017-07-06-introducing-code-owners/), for example.
+
+We will get there.
+
+### A monorepo gives you a single history timeline
+
+While visibility and flexibility are quite convenient, the one feature of a monorepo which is very hard (if not impossible) to replicate is the single history timeline.
+
+We’ll go into why it’s so hard further below, but for now let’s look at the advantages it brings.
+
+Single history timelines gives us a reliable total order of changes to the codebase over time. This means that for any two contributions to the codebase, we can definitively and reliably decide which came first and which came second. It should never be ambiguous. It also means that each commit in a monorepo is a snapshot of the system as it was at that given moment.
+
+This enables a really interesting capability: it means cross-cutting changes can be made atomically, safely, in one go.
+
+#### Atomic cross-cutting commits
+
+Atomic cross-cutting commits make two specific scenarios much easier to achieve.
+
+First, externally forced global migrations are much easier and quicker. Let’s say multiple services use a common database and need the password and we need to rotate it. The password itself is (hopefully!) stored in a secure credential store, but at least the reference to it will be in several different places within the codebase.
+
+If the reference changes (let’s say the reference is generated every time), we can update every specific the mention of it at once, in one commit, with a search & replac. This will get everything working again.
+
+Second, and more important, we can change APIs and update both producer and all consumers at the same time, atomically. For example, we can add an endpoint to an API service and migrate consumers to use the new endpoint. In the next commit, we can remove the old API endpoint as it’s no longer needed.
+
+If you’re trying to do this across multiple repositories with their own histories, the change will have to be split into several parallel commits. This leaves the potential for the two changes to overlap and happen in the wrong order. Some consumers can get migrated, then the endpoint gets removed, then the rest of the consumers get migrated. The mid-stage is an inconsistent state and an attempt to use the not-yet-migrated consumers will fail attempting to call an API endpoint that no longer exists.
+
+#### Monorepos remove inconsistencies in your dependencies
+
+Inconsistencies between dependent modules are the entire reason why dependency management and versioning exist. In a monorepo, the above scenario simply can’t happen. And that’s how the conversation about storing code in one place ends up being about versioning and dependency management. Monorepos essentially make the problem go away (which is my favourite kind of problem solving).
+
+Okay, this isn’t entirely true. There are still consequences to making breaking changes to APIs. For one, you need to update all the consumers, which is work, but you also need to build all of them, test everything works and deploy it all. This is quite hard for (micro)services that get individually deployed: making coordinated deployment of multiple services atomic is possible but not trivial. You can use a blue-green strategy, for example, to make sure there is no moment in time where only some services changed but not others.
+
+It gets harder for shared libraries. Building and publishing artifacts of new versions and updating all consumers to use the new version are still at least two commits, otherwise you’d be referring to versions that won’t exist until the builds finish. Now, things are getting inconsistent again and the view of what is supposed to work together is getting blurred in time again. And what if someone sneaks some changes in between the two commits. We are, once again, in a race. Unless…
+
+## Building from the latest source
+
+Yes. What if instead of building and publishing shared code as prebuilt artifacts (binaries, jars, gems, npm modules), we build each deployable service completely from source. Every time a service changes, it is entirely rebuilt, including all dependencies.
+
+This is a fair bit of work for some compiled languages. However, it can be optimised with incremental build tools which skip work that’s already been done and cached. Some, like Go, solve it by simply [having designed for a fast compiler](https://talks.golang.org/2012/splash.article#TOC_5.). For dynamic languages, it’s just a matter of setting up include paths correctly and bundling all the relevant code. The added benefit here is you don’t need to do anything special if you’re working on a set of interdependent projects locally. No more `npm link`.
+
+The more interesting consequence is how this affects changing a shared dependency. When building from source, you have to make sure every time that happens, all the consumers get rebuilt using it. This is great, everyone gets the latest and greatest things immediately. …right?
+
+Don’t worry, I can hear the alarm bells ringing in your head all the way from here. Your service depends on tens, if not hundreds of libraries. Any time anyone makes a mistake and breaks any of them, it breaks your code? Hell no.
+
+But hear me out.
+
+This is a problem of understanding dependencies and testing consumers. The important consequence of building from source is you now have a single handle on what is supposed to work together. There are no separate versions, you know what to test and it’s just one thing at any one time.
+
+### Push dependency management
+
+In manual dependency update management – I will call it “pull” dependency management – you as a consumer are responsible for updating your dependencies as you see fit and making sure everything still works. If you find a bug, you simply don’t upgrade. Instead you report the bug to the maintainer and expect them to fix it. This can be months after the bug was introduced and the bug may have already been fixed in a newer version you haven’t yet upgraded to because things have moved on quite a bit while you were busy hitting a deadline and it would now be a sizable investment to upgrade. Now you’re a little stuck and all the ways out are a significant amount of work for someone, all that because the feedback loop is too long.
+
+Normally, as a library maintainer, you’re never quite certain how to make sure you’re not breaking anything. Even if you could run your consumers’ test suites, which consumers at what versions do you test against? And as a [DevOps](https://subscription.packtpub.com/tech/devops "DevOps eBooks, Courses & Videos") team doing 24/7 support for a system, how do you know which version or versions of a library is used across your services. What do you need to update to roll out that important bug fix to your customers?
+
+In push dependency management, quite a few things are the other way round. As a consumer, you’re not responsible for updating, it is done for you – effectively, you depended on the “latest” version of everything. Every time a maintainer of the library makes a change you are responsible for testing for regressions. No, not manually! You do have unit tests, right? Right?? Please have a solid regression test suite you trust, it’s 2019\. So with your unit test suite, all you need to do is run it. Actually no, let’s let the maintainer run it. If they introduce a problem, they get immediate feedback from you, before their change ever hits the master branch.
+
+And this is the contract agreement in push dependency management: If you make a change and break anyone, you are responsible for fixing them. They are responsible for supplying a good enough, by their own standard, automated mechanism for you to verify things still work. The definition of “works” is the tests pass. Seriously though, you need to have a decent regression test suite!
+
+### Continuous integration for push dependencies: the final piece of the monorepo puzzle
+
+The main missing piece of tooling around monorepos is support for push dependencies in CI systems. It’s quite straightforward to implement the strategy yourself, but it’s still hard enough to be worth some shared tooling.
+
+Unfortunately, the existing build tools geared towards monorepos like [Bazel](https://bazel.build/) and [Buck](https://buckbuild.com/) take over the entire build process from more familiar tools (like Maven or Babel) and you need to switch to them. Although to be fair, in exchange, you get very performant incremental builds.
+
+A lighter tooling, which lets you express dependencies between components in a monorepo, in a language agnostic way, and is only responsible for deciding which build jobs needs to be triggered given a set of changed components in a commit seems to be missing.
+
+**So I [built one](https://github.com/charypar/monobuild).**
+
+It’s far from perfect, but it should do the trick. Hopefully, someone with more time on their hands will eventually come up with something similarly cheap to introduce into your build system and the community will adopt it more widely.
+
+The main takeaway is that if we build from source in a monorepo we can set up a central Continuous Integration system responsible for triggering builds for all projects potentially affected by a change, intended to make sure you didn’t break anything with the work you did, whether it belongs to you or someone else. This is next to impossible in a multi-repo codebase because of the blurriness of history mentioned above.
+
+It’s interesting to me that we have this problem today in the larger ecosystem. Everywhere. And we stumble forward and somewhat successfully live with upstream changes occasionally breaking us, because we don’t really have a better choice. We don’t have the ability to test all the consumers in the world and fix things when we break them. But if we can, at least for our own codebase, why wouldn’t we do that? Along with a “you broke it you fix it” policy. Building from source in a monorepo allows that. It also makes it significantly easier to make breaking changes much harder to make. That said…
+
+## About breaking changes
+
+There are two kinds of changes that break the consumer – the ones you introduce by accident, intending the keep backwards compatibility, and then the intentional ones. The first kind should not be too laborious to fix: once you find out what’s wrong, fix it in one place, make sure you didn’t break anything else, done.
+
+The second kind is harder. If you absolutely have to make an intentional breaking change, you will need to update all the consumers. Yes. That’s the deal. And that’s also fair. I’m not sure why we’re okay with breaking changes being intentionally introduced upstream on a whim. In any other area of human endeavour, a breach of contract makes people angry and they will expect you to make good by them. Yet we accept breaking changes in software as a fact of life. “It’s fine, I bumped the major version!”
+
+### Semantic versioning: a bad idea
+
+It’s not fine. In fact, [semantic versioning](https://semver.org/) is just a bad idea. I know that’s a bold claim and this is a whole separate article (which I promise to write soon), but I’ll try to do it at least some justice here. Semantic versioning is meant to convey some meaning with the version number, but the chosen meanings it expresses are completely arbitrary.
+
+First of all, semver only talks about API contract, not behaviour. Adding side effects or changing performance characteristics of an API call for worse while keeping the data interface the same is a completely legal patch level change. And I bet you consider that a breaking change, because it will break your app.
+
+Second, does anyone really care about minor vs. patch? The promise is the API doesn’t break. So really we only care about major or other. Major is a dealbreaker, otherwise we’re ok. From a consumer perspective a major version bump spells trouble and potentially a lot of work.
+
+Making breaking changes is a mean thing to do to your consumers and you can and should avoid them. Just keep the old API around and working and add the new one next to it. As for version numbers, the most important meaning to convey seems to be “how old?” because code tends to rot, and so versioning by date might be a good choice.
+
+But, you say, I’ll have more and more code to maintain! Well yes, of course. And that’s the other problem with semver, the expectation that even old versions still get patches and fixes. It’s not very explicitly stated but it’s there. And because we typically maintain old versions on long-running branches in version control, it’s not even very visible in the codebase.
+
+What if you kept older APIs around, but deprecated them and the answer to bugs in them would be to migrate to the newer version of a particular call, which doesn’t have the bug? Would you care about having that old code? It just sits there in the codebase, until nobody uses it.
+
+It would also be much less work for the consumer, it’s just one particular call. Also, the bug is typically deeper inside your code, so it’s actually more likely you can fix it in one go for all the API surfaces, old or new. Doing the same thing in the branching model is N times the work (for N maintenance branches).
+
+There are technologies that follow this model out of necessity. One example is [GraphQL](https://hub.packtpub.com/7-reasons-to-choose-graphql-apis-over-rest-for-building-your-apis/), which was built to solve (among other things) the problem of many old API consumers in people’s hands and the need to support all of them for at least some time. In GraphQL, you deprecate data fields in your API and they become invisible in documentation and introspection calls, but they still work as they used to. Possibly forever. Or at least until barely anyone uses them.
+
+The other option you have if you want to keep an older version of a library around and maintain it in a monorepo is to make a copy of the folder and work on the two separately. It’s the same thing as cutting a long running branch, you’re just making a copy in “file space” not “branch space”. And it’s more visible and representative of reality – both versions exist as first-class components being maintained.
+
+There are many different versioning and maintenance strategies you could adopt, but in my opinion the preference should be to invest effort into the latest version, making breaking changes only when absolutely inevitable (and at that point, isn’t the new version just a new thing? Like Luxon, the next version of Moment.js) and making updates trivial for your consumers. And if it’s trivial you can do it for them. Ultimately it was your decision to break the API, so you should also do the work, it’s only fair and it makes you evaluate the cost-benefit trade-off of the change.
+
+In a monorepo with building from source, this versioning strategy happens naturally. You can, however, adopt others. You just lose some of the guarantees and make feedback loops longer.
+
+Versioning strategy is really an orthogonal concept to storing code in a single repository, but the relative costs do change if you use one. Versioning by using a single version that cuts across the system becomes a lot cheaper, which means breaking changes becomes more expensive. This tends to lead to more discussions about versioning.
+
+This is actually true for most of the things we covered above. You can, but don’t have to adopt these strategies with a monorepo.
+
+## Pay as you go monorepos
+
+It’s totally possible to just store everything in a single repo and not do anything else. You’ll get the visibility of what exists and flexibility of boundaries and ownership. You can still publish individual build artifacts and pull-manage dependencies (but you’d be missing out).
+
+Add building from source and you get the single snapshot benefit – you now know what code runs in a particular version of your system and to an extent, you can [think about it as a monolith](https://blog.red-badger.com/deploy-a-microservices-application-as-though-it-was-a-monolith), despite being formed of many different independent modules and services.
+
+Add dependency aware continuous integration and the feedback loop around issues introduced while working on the codebase gets much much shorter, allowing you to go faster and waste less time on carefully managing versions, reporting bugs, making big forklift upgrades, etc. Things tend to get out of control much less. It’s simpler.
+
+Best of all, you can mix and match strategies. If you have a hugely popular library in your monorepo and each change in it triggers a build of hundreds of consumers, it only takes a couple of those builds being flakey and it will make it very hard to get builds for the changes in the library to pass. This is really a CI problem to fix (and there are so many interesting strategies out there), but sometimes you can’t do that easily.
+
+You could also say the feedback loop is now too tight for the scale and start versioning the library’s intentional releases. This still doesn’t mean you have to publish versioned artifacts. You can have a stable copy of the library in the repo, which consumers depend on, and a development copy next to it which the maintainers work on. Releasing then means moving changes from the development folder to the release one and getting its builds to pass. Or, if you wish, you can publish artifacts and let consumers pull them on their own time and report bugs to you.
+
+And you still don’t need to promise fixes for older versions without upgrading to the latest (Libraries should really have a published “code of maintenance” outlining the promises and setting maintenance expectations). And if you have to, I would again recommend making a copy, not branching. In fact, in a monorepo, branching might just not be a very good idea. Temporary branches are still useful to work on proposed changes, but long-running branches just hide the full truth about the system. And so does relying on old commits.
+
+The copies of code being used exist either way, the are still relevant and you still need to consider them for testing and security patching, they are just hidden in less apparent dimensions of the codebase “space” – branch dimension or time dimension. These are hard to think about and visualise, so maybe it’s not a good idea to use them to keep relevant and current versions of the code and stick to them as change proposal and “time travel” mechanisms.
+
+Hopefully you can see that there’s an entire spectrum of strategies you can follow but don’t have to adopt wholesale.
+
+### I’m sold, but… can’t we do all this with a multi-repo?
+
+Most of the things discussed above are not really strictly dependent on monorepos, they are more a natural consequence of adopting one. You can follow versioning strategies other than semver outside of a monorepo. You can probably implement an automated version bumping system which will upgrade all the dependents of a library and test them, logging issues if they don’t pass.
+
+What you can’t do outside of a monorepo, as far as I can tell, is the atomic snapshotting of history to have a clear view of the system. And have the same view of the system a year ago. And be able to reproduce it.
+
+As soon as multiple parallel version histories are established, this ability goes away and you introduce distributed state. It’s impossible to update all the “heads” in this multi history at the same time, consistently. In version control, like git, the histories are ordered by the “follows” relationship. Later version follows – points to – its predecessor. To get a consistent, canonical view of time, there needs to be a single entrypoint. Without this central entry point, it’s impossible to define a consistent order across the entire set, it depends on where we start looking.
+
+Essentially, you already chose Partition from the three CAP properties. Now you can pick either Consistency or Availability. Typically, availability is important and so you lose consistency. You could choose consistency instead, but that would mean you can’t have availability – in order to get a consistent snapshot of the state of all of the repos, write access would need to be stopped while the snapshot is taken. In a monorepo, you don’t have partitioning, and can therefore have consistency and availability.
+
+From a physics perspective, multiple repositories with their own history effectively create a kind of spacetime, where each repository is a place and references across repos represent information propagating across space. The speed of that propagation isn’t infinite – it’s not instant. If changes happen in two places close enough in time, from the perspective of those two places, they happen in a globally inconsistent order, first the local change, then the remote change. Neither of the views is better and more true and it’s impossible to decide which of the changes came first.
+
+Unless, that is, we introduce an agreed upon central point which references all the repositories that exist and every time one of them updates, the reference in this master gets updated and a revision is created.
+
+**Congratulations, we created a monorepo, well done us.**
+
+## The benefits of going all-in when it comes to monorepos
+
+As I said at the beginning, adopting the monorepo approach fully will result in fewer barriers in the software development lifecycle. You get faster feedback loops – the ability to test consumers of libraries before checking in a change and immediate feedback. You will spend less time looking for code and working out how it gets assembled together. You won’t need to set up repositories or ask for permissions to contribute. You can spend more time-solving problems to help your customers instead of problems you created for yourself.
+
+It takes some time to get the tooling setup right, but you only do it once, all the later projects get the setup for free. Some of the tooling is a little lacking, but in our experience there are no show stoppers. A stable, reliable CI is an absolute must, but that’s regardless of monorepos. Monorepos should also help make builds repeatable.
+
+The repo does eventually get big, but it takes years and years and hundreds of people to get to a size where it actually becomes a real problem. The [Linux](https://subscribe.packtpub.com/learn-linux/ "Learn Linux") kernel is a monorepo and it’s probably still at least an order of magnitude bigger than your project (it is bigger than ours anyway, despite having hundreds of engineers involved at this point). Basically, you’re not Google or Microsoft. And when you are, you’ll be able to afford optimising your version control system. The UX of your code review and source hosting tooling is probably the first thing that will break, not the underlying infrastructure. For smoother scaling, the one recommendation I have is to set a file size limit – accidentally committed large files are quite hard to remove, at least in git.
+
+After using a monorepo for over two years we’re still yet to have any big technical issues with it (plenty of political ones, but that’s a story for another day) and we see the same benefits as Google reported in [their recent paper](https://ai.google/research/pubs/pub47040).
+
+I honestly don’t really know why you would start with any other strategy.
