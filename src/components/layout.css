@@ -1,3 +1,5 @@
+/* @import url("//basehold.it/26"); */
+
 * {
   margin: 0;
   padding: 0;
@@ -13,7 +15,7 @@ html {
 }
 
 h1 {
-  color: hsl(225, 20%, 0%);
+  color: hsl(225, 13%, 0%);
   font-size: 2.827rem;
   line-height: 3.25rem;
   padding: 3.25rem 0 1.625rem 0;
@@ -21,14 +23,14 @@ h1 {
 }
 
 h2 {
-  color: hsl(225, 20%, 35%);
+  color: hsl(220, 13%, 35%);
   font-size: 1.999rem;
   line-height: 3.25rem;
   padding: 0.625rem 0 1rem 0;
 }
 
 h3 {
-  color: hsl(225, 20%, 35%);
+  color: hsl(220, 13%, 35%);
   font-weight: 300;
   font-size: 1.414rem;
   line-height: 1.625rem;
@@ -36,7 +38,7 @@ h3 {
 }
 
 h4 {
-  color: hsl(225, 20%, 35%);
+  color: hsl(220, 13%, 35%);
   font-size: 1rem;
   line-height: 1.625rem;
   padding: 0;
@@ -56,26 +58,30 @@ a:hover {
 }
 
 code {
-  background-color: hsl(225, 20%, 90%);
+  font-family: Monaco, monospace;
+  background-color: hsl(220, 13%, 90%);
   border-radius: 0.2rem;
   padding: 0.1rem 0.3rem;
 }
 
 pre {
-  background-color: hsl(225, 20%, 35%);
   font-size: 0.8125rem;
   line-height: 1.625rem;
   letter-spacing: 0.03rem;
-  padding: 0.8125rem 1rem;
   margin-bottom: 1.625rem;
   border-radius: 0.3rem;
   overflow-x: scroll;
 }
 
 pre code {
-  color: hsl(0, 0%, 100%);
-  background-color: hsl(225, 20%, 35%);
+  background-color: inherit;
   padding: 0;
+}
+
+:root {
+  --grvsc-padding-v: 0.8125rem;
+  --grvsc-padding-h: 1rem;
+  --grvsc-border-radius: 0.3em;
 }
 
 ul,
@@ -100,7 +106,7 @@ main {
 
 @media (min-width: 1024px) {
   html {
-    font-size: 20px;
+    font-size: 18px;
   }
 
   main {

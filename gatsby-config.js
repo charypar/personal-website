@@ -13,13 +13,13 @@ module.exports = {
       resolve: `gatsby-plugin-mdx`,
       options: {
         gatsbyRemarkPlugins: [
-          // {
-          //   resolve: `gatsby-remark-vscode`,
-          //   options: {
-          //           theme: "Atom One Dark",
-          //           extensions: ["vscode-theme-onedark"],
-          //         },
-          // },
+          {
+            resolve: `gatsby-remark-vscode`,
+            options: {
+              theme: "Atom One Dark",
+              extensions: ["vscode-theme-onedark", "toml"],
+            },
+          },
         ],
       },
     },
