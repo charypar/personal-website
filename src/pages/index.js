@@ -20,7 +20,7 @@ export default function IndexPage({ data }) {
               {node.frontmatter.date} | {node.timeToRead} minute read
             </p>
             <p>
-              {node.excerpt}{" "}
+              {node.frontmatter.description}{" "}
               <Link to={`/posts/${node.frontmatter.slug}`}>read more</Link>.
             </p>
           </article>
@@ -38,8 +38,9 @@ export const query = graphql`
           excerpt(pruneLength: 250)
           frontmatter {
             title
+            description
             slug
-            date
+            date(formatString: "Do MMMM YYYY")
           }
           timeToRead
         }
