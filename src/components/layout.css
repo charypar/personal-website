@@ -1,8 +1,21 @@
 /* @import url("//basehold.it/26"); */
+@import url("//fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap");
+@import url("//fonts.googleapis.com/css2?family=Roboto+Mono&display=swap");
 
 * {
   margin: 0;
   padding: 0;
+}
+
+:root {
+  --grvsc-padding-v: 0.8125rem;
+  --grvsc-padding-h: 1rem;
+  --grvsc-border-radius: 0;
+  --color-white: hsl(240, 100%, 98%);
+  --color-gray: hsl(0, 0%, 21%);
+  --color-black: hsl(222, 43%, 9%);
+  --color-orange: hsl(6, 71%, 44%);
+  --color-blue: hsl(206, 46%, 37%);
 }
 
 html {
@@ -11,11 +24,19 @@ html {
   word-spacing: 0.05rem;
   text-rendering: optimizeLegibility;
   line-height: 1.625;
-  color: hsl(0, 0%, 20%);
+  color: var(--color-gray);
+  background-color: var(--color-white);
+}
+
+::selection {
+  color: var(--color-white);
+  background-color: var(--color-blue);
 }
 
 h1 {
-  color: hsl(225, 13%, 0%);
+  font-family: "Roboto Slab", serif;
+  font-weight: 700;
+  color: var(--color-black);
   font-size: 2.827rem;
   line-height: 3.25rem;
   padding: 3.25rem 0 1.625rem 0;
@@ -23,22 +44,24 @@ h1 {
 }
 
 h2 {
-  color: hsl(220, 13%, 35%);
+  font-family: "Roboto Slab", serif;
+  color: var(--color-blue);
   font-size: 1.999rem;
   line-height: 3.25rem;
   padding: 0.625rem 0 1rem 0;
 }
 
 h3 {
-  color: hsl(220, 13%, 35%);
-  font-weight: 300;
+  font-family: "Roboto Slab", serif;
+  color: var(--color-blue);
+  font-weight: 400;
   font-size: 1.414rem;
   line-height: 1.625rem;
   padding: 0.725rem 0 0.9rem 0;
 }
 
 h4 {
-  color: hsl(220, 13%, 35%);
+  color: var(--color-blue);
   font-size: 1rem;
   line-height: 1.625rem;
   padding: 0;
@@ -50,7 +73,7 @@ p {
 }
 
 a {
-  color: hsl(190, 60%, 50%);
+  color: var(--color-orange);
 }
 
 a:hover {
@@ -58,30 +81,29 @@ a:hover {
 }
 
 code {
-  font-family: Monaco, monospace;
-  background-color: hsl(220, 13%, 90%);
+  font-family: "Roboto Mono", Monaco, monospace;
+  /* font-size: 0.8125rem; */
+  letter-spacing: 0;
+  /* background-color: hsl(220, 13%, 90%); */
+  color: var(--color-blue);
   border-radius: 0.2rem;
-  padding: 0.1rem 0.3rem;
+  /* padding: 0.1rem 0.3rem; */
 }
 
 pre {
-  font-size: 0.8125rem;
   line-height: 1.625rem;
   letter-spacing: 0.03rem;
   margin-bottom: 1.625rem;
-  border-radius: 0.3rem;
   overflow-x: scroll;
+  border-style: solid;
+  border-width: 0 0 0 0.5em;
+  border-color: var(--color-blue);
 }
 
 pre code {
+  font-size: 0.9rem;
   background-color: inherit;
   padding: 0;
-}
-
-:root {
-  --grvsc-padding-v: 0.8125rem;
-  --grvsc-padding-h: 1rem;
-  --grvsc-border-radius: 0.3em;
 }
 
 ul,
@@ -104,7 +126,7 @@ main {
   max-width: 40rem;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1280px) {
   html {
     font-size: 18px;
   }

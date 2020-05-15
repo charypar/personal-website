@@ -3,8 +3,13 @@
 }
 
 .byline {
-  font-variant: small-caps;
+  font-family: "Roboto Slab", serif;
+  color: var(--color-blue);
   text-align: center;
-  color: hsl(225, 20%, 45%);
   padding: 0 0 2.4375rem 0;
+}
+
+.description {
+  font-family: "Roboto Slab", serif;
+  color: var(--color-black);
 }
