@@ -4,28 +4,25 @@ import { Link, graphql } from "gatsby"
 import Layout from "../components/layout"
 import SEO from "../components/seo"
 
+import { post, title, byline } from "./index.module.css"
+
 export default function IndexPage({ data }) {
   return (
     <Layout>
-      <SEO title="Home" />
-      <div>
+      <SEO title="Viktor Charypar" description="Clever title: " />
+      <section className="content">
         {data.allMdx.edges.map(({ node }) => (
-          <article>
-            <h2>
-              <Link to={`/posts/${node.frontmatter.slug}`}>
-                {node.frontmatter.title}
-              </Link>
-            </h2>
-            <p>
-              {node.frontmatter.date} | {node.timeToRead} minute read
-            </p>
-            <p>
-              {node.frontmatter.description}{" "}
-              <Link to={`/posts/${node.frontmatter.slug}`}>read more</Link>.
-            </p>
+          <article className={post}>
+            <Link to={`/posts/${node.frontmatter.slug}`}>
+              <h2 className={title}>{node.frontmatter.title}</h2>
+              <p className={byline}>
+                {node.frontmatter.date} – {node.timeToRead} minute read
+              </p>
+              <p>{node.frontmatter.description}</p>
+            </Link>
           </article>
         ))}
-      </div>
+      </section>
     </Layout>
   )
 }
@@ -40,6 +37,7 @@ export const query = graphql`
             title
             description
             slug
+            author
             date(formatString: "Do MMMM YYYY")
           }
           timeToRead
