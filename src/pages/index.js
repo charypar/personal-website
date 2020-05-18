@@ -29,7 +29,7 @@ export default function IndexPage({ data }) {
 
 export const query = graphql`
   query {
-    allMdx {
+    allMdx(sort: { fields: frontmatter___date, order: DESC }) {
       edges {
         node {
           excerpt(pruneLength: 250)
