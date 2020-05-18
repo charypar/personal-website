@@ -7,6 +7,7 @@
 
 import React from "react"
 import PropTypes from "prop-types"
+import { Helmet } from "react-helmet"
 
 import Header from "./header"
 import "./layout.css"
@@ -14,6 +15,13 @@ import "./layout.css"
 const Layout = ({ children }) => {
   return (
     <>
+      <Helmet>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap"
+          rel="stylesheet"
+        />
+      </Helmet>
+
       <Header />
       <div>
         <main>{children}</main>

@@ -1,4 +1,6 @@
 import React from "react"
+import { Helmet } from "react-helmet"
+
 import Layout from "../components/layout"
 import SEO from "../components/seo"
 import { graphql } from "gatsby"
@@ -14,6 +16,12 @@ export default function Post({ data: { mdx } }) {
         title={mdx.frontmatter.title}
         description={mdx.frontmatter.description}
       />
+      <Helmet>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap"
+          rel="stylesheet"
+        />
+      </Helmet>
       <h1 className={title}>{mdx.frontmatter.title}</h1>
       <p className={byline}>
         {mdx.frontmatter.author} — {mdx.frontmatter.date} — {mdx.timeToRead}{" "}
